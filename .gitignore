@@ -23,6 +23,9 @@
 hs_err_pid*
 replay_pid*
 
+#local application properties
+src/main/resources/application-local.properties
+!src/main/resources/application.properties
 
 #Local build artifacts
 HELP.md
