@@ -2,7 +2,6 @@ package oleksii.queriestask.service;
 
 import oleksii.queriestask.repository.JdbcTemplateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import oleksii.queriestask.datamodel.Query;
@@ -29,8 +28,9 @@ public class RuntimeQueryService implements QueryService {
     }
 
     @Override
-    public void addQuery(String query) {
-        queriesToExecute.add(Query.builder().id(idCounter++).query(query).build());
+    public Long addQuery(String query) {
+        queriesToExecute.add(Query.builder().id(idCounter).query(query).build());
+        return idCounter++;
     }
 
     @Override
@@ -68,7 +68,6 @@ public class RuntimeQueryService implements QueryService {
         }
 
         queriesExecuted.put(queryToExecute, result);
-
 
         return result;
     }

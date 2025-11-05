@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 public class Query {
 
     private long id;

@@ -48,7 +48,9 @@ public class RuntimeQueryServiceTest {
     void addOneQueryTest(){
         assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(0);
 
-        runtimeQueryService.addQuery(testQueryContent);
+        Long id = runtimeQueryService.addQuery(testQueryContent);
+
+        assertThat(id).isEqualTo(0L);
 
         assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
 

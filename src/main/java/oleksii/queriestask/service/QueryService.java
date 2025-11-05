@@ -5,7 +5,7 @@ import java.util.Collection;
 
 public interface QueryService {
 
-    void addQuery(String query);
+    Long addQuery(String query);
 
     Collection<Query> getQueries();
 
