@@ -1,19 +1,19 @@
 package oleksii.queriestask.controller;
 
+import oleksii.queriestask.datamodel.Query;
 import oleksii.queriestask.service.QueryService;
-import oleksii.queriestask.service.RuntimeQueryService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -26,15 +26,36 @@ public class RuntimeQueryControllerTest {
     @MockitoBean(name = "runtimeQueryService")
     private QueryService service;
 
+    private static final String PATH = "/queries";
+
+    private static final String QUERY = "SELECT * FROM test";
+
     @Test
     void addTest() throws Exception {
 
-        Mockito.when(service.addQuery("SELECT * FROM test")).thenReturn(0L);
+        Mockito.when(service.addQuery(QUERY)).thenReturn(0L);
 
-        mockMvc.perform(post("/queries")
-                .contentType(MediaType.TEXT_PLAIN)
-                .content("SELECT * FROM test"))
+        mockMvc.perform(post(PATH)
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(QUERY))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(0));
+    }
+
+    @Test
+    void findAllTest() throws Exception {
+
+        Mockito.when(service.getQueries()).thenReturn(
+                List.of(
+                        Query.builder().id(0L).query(QUERY).build(),
+                        Query.builder().id(1L).query(QUERY).build()
+                ));
+
+        mockMvc.perform(get(PATH))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value(0))
+                .andExpect(jsonPath("$[0].query").value(QUERY))
+                .andExpect(jsonPath("$[1].id").value(1L))
+                .andExpect(jsonPath("$[1].query").value(QUERY));
+
     }
 
 }
