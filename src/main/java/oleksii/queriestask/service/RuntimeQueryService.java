@@ -29,6 +29,9 @@ public class RuntimeQueryService implements QueryService {
 
     @Override
     public Long addQuery(String query) {
+        if (query.startsWith("\"") && query.endsWith("\"") && query.length() > 1) {
+            query = query.substring(1, query.length() - 1);
+        }
         queriesToExecute.add(Query.builder().id(idCounter).query(query).build());
         return idCounter++;
     }
@@ -56,7 +59,7 @@ public class RuntimeQueryService implements QueryService {
         try{
             queryResult=jdbcTemplateRepository.getQueryResultList(queryToExecute);
         }catch (Exception e){
-            //add logs
+            //add logging
             return new Object[0][];
         }
 
