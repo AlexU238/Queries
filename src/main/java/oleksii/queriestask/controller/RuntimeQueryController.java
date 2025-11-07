@@ -4,7 +4,9 @@ import oleksii.queriestask.datamodel.Query;
 import oleksii.queriestask.service.QueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,6 +37,12 @@ public class RuntimeQueryController implements QueryController {
     @GetMapping("/execute")
     @Override
     public Object[][] executeById(@RequestParam("query") Long query) {
-        return queryService.getQueryResults(query);
+        try{
+            return queryService.getQueryResults(query);
+        }catch (NullPointerException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }catch (IllegalStateException e){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 }
