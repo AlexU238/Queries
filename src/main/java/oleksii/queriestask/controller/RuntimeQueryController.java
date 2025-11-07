@@ -10,9 +10,9 @@ import java.util.Collection;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/queries")
 public class RuntimeQueryController implements QueryController {
 
+    private static final String QUERIES_PATH="/queries";
     QueryService queryService;
 
     @Autowired
@@ -20,13 +20,13 @@ public class RuntimeQueryController implements QueryController {
         this.queryService = queryService;
     }
 
-    @PostMapping
+    @PostMapping(QUERIES_PATH)
     @Override
     public Map<String, Object> add(@RequestBody String query) {
         return Map.of("id",queryService.addQuery(query));
     }
 
-    @GetMapping
+    @GetMapping(QUERIES_PATH)
     @Override
     public Collection<Query> findAll() {
         return queryService.getQueries();
@@ -34,7 +34,7 @@ public class RuntimeQueryController implements QueryController {
 
     @GetMapping("/execute")
     @Override
-    public Object[][] executeById(@RequestParam("id") Long id) {
-        return queryService.getQueryResults(id);
+    public Object[][] executeById(@RequestParam("query") Long query) {
+        return queryService.getQueryResults(query);
     }
 }
