@@ -66,4 +66,18 @@ public class RuntimeQueryControllerTest {
                 .andExpect(jsonPath("$[0][2]").value("Test"))
                 .andExpect(jsonPath("$[0][3]").value("T"));
     }
+
+    @Test
+    void executeByIdNotFoundTest() throws Exception {
+        Mockito.when(service.getQueryResults(0L)).thenThrow(NullPointerException.class);
+
+        mockMvc.perform(get("/execute?query=0")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void executeByIdBadRequestTest() throws Exception {
+        Mockito.when(service.getQueryResults(0L)).thenThrow(IllegalStateException.class);
+
+        mockMvc.perform(get("/execute?query=0")).andExpect(status().isBadRequest());
+    }
 }
