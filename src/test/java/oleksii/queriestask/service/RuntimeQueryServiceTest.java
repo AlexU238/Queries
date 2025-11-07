@@ -73,7 +73,6 @@ public class RuntimeQueryServiceTest {
 
     @Test
     void getAllQueriesToExecuteTest(){
-
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
         runtimeQueryService.getQueriesToExecute().add(testQuery2);
 
@@ -82,12 +81,10 @@ public class RuntimeQueryServiceTest {
         assertThat(runtimeQueryService.getQueries().size()).isEqualTo(runtimeQueryService.getQueriesToExecute().size());
 
         assertThat(runtimeQueryService.getQueriesToExecute()).contains(testQuery1, testQuery2);
-
     }
 
     @Test
     void getQueryResultsTest(){
-
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
         runtimeQueryService.getQueriesToExecute().add(testQuery2);
 
@@ -96,7 +93,6 @@ public class RuntimeQueryServiceTest {
         assertThat(runtimeQueryService.getQueriesToExecute().stream().anyMatch(q->q.getId()==1L));
 
         assertThat(runtimeQueryService.getQueriesExecuted().size()).isEqualTo(0);
-
 
         when(jdbcTemplateRepository.getQueryResultList(testQueryContent)).thenReturn(mockResult);
 
@@ -107,12 +103,10 @@ public class RuntimeQueryServiceTest {
         assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
 
         assertThat(runtimeQueryService.getQueriesExecuted().size()).isEqualTo(1);
-
     }
 
     @Test
     void getQueryResultsFailTest(){
-
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
 
         assertThat(runtimeQueryService.getQueriesToExecute().stream().anyMatch(q->q.getId()==1L));
@@ -126,8 +120,5 @@ public class RuntimeQueryServiceTest {
         assertThat(result.length).isEqualTo(0);
 
         assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(0);
-
     }
-
-
 }

@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @WebMvcTest(RuntimeQueryController.class)
 public class RuntimeQueryControllerTest {
 
@@ -32,7 +31,6 @@ public class RuntimeQueryControllerTest {
 
     @Test
     void addTest() throws Exception {
-
         Mockito.when(service.addQuery(QUERY)).thenReturn(0L);
 
         mockMvc.perform(post(PATH)
@@ -43,7 +41,6 @@ public class RuntimeQueryControllerTest {
 
     @Test
     void findAllTest() throws Exception {
-
         Mockito.when(service.getQueries()).thenReturn(
                 List.of(
                         Query.builder().id(0L).query(QUERY).build(),
@@ -59,7 +56,6 @@ public class RuntimeQueryControllerTest {
 
     @Test
     void executeByIdTest() throws Exception {
-
         Object[][] result = {{1,0,"Test",'T'}};
 
         Mockito.when(service.getQueryResults(0L)).thenReturn(result);
@@ -70,5 +66,4 @@ public class RuntimeQueryControllerTest {
                 .andExpect(jsonPath("$[0][2]").value("Test"))
                 .andExpect(jsonPath("$[0][3]").value("T"));
     }
-    
 }
