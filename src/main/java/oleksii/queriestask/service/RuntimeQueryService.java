@@ -43,12 +43,10 @@ public class RuntimeQueryService implements QueryService {
 
     @Override
     public Object[][] getQueryResults(long id) {
-
         String queryToExecute=queriesToExecute.stream()
                 .filter(q -> q.getId() == id)
-                .findFirst()
-                .get()
-                .getQuery();
+                .findFirst().map(Query::getQuery)
+                .orElseThrow(() -> new NullPointerException("Query with id: " + id + " not found"));
 
         queriesToExecute.removeIf(q -> q.getId() == id);
 
@@ -60,7 +58,7 @@ public class RuntimeQueryService implements QueryService {
             queryResult=jdbcTemplateRepository.getQueryResultList(queryToExecute);
         }catch (Exception e){
             //add logging
-            return new Object[0][];
+            throw new IllegalStateException("Failed to execute query", e);
         }
 
         Object[][] result=new Object[queryResult.size()][];
