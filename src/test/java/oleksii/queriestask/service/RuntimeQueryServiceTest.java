@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -106,6 +107,13 @@ public class RuntimeQueryServiceTest {
     }
 
     @Test
+    void getQueryResultsNotFoundTest(){
+        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(0);
+
+        assertThrows(NullPointerException.class,() -> {runtimeQueryService.getQueryResults(0L);});
+    }
+
+    @Test
     void getQueryResultsFailTest(){
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
 
@@ -115,9 +123,7 @@ public class RuntimeQueryServiceTest {
 
         when(jdbcTemplateRepository.getQueryResultList(testQueryContent)).thenThrow(new DataAccessException("Test Exception") {});
 
-        Object[][] result = runtimeQueryService.getQueryResults(1L);
-
-        assertThat(result.length).isEqualTo(0);
+        assertThrows(IllegalStateException.class,() -> {runtimeQueryService.getQueryResults(1L);});
 
         assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(0);
     }
