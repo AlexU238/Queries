@@ -20,13 +20,13 @@ public class RuntimeQueryController implements QueryController {
         this.queryService = queryService;
     }
 
-    @PostMapping("")
+    @PostMapping
     @Override
     public Map<String, Object> add(@RequestBody String query) {
         return Map.of("id",queryService.addQuery(query));
     }
 
-    @GetMapping("")
+    @GetMapping
     @Override
     public Collection<Query> findAll() {
         return queryService.getQueries();
