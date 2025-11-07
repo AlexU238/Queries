@@ -55,7 +55,20 @@ public class RuntimeQueryControllerTest {
                 .andExpect(jsonPath("$[0].query").value(QUERY))
                 .andExpect(jsonPath("$[1].id").value(1L))
                 .andExpect(jsonPath("$[1].query").value(QUERY));
-
     }
 
+    @Test
+    void executeByIdTest() throws Exception {
+
+        Object[][] result = {{1,0,"Test",'T'}};
+
+        Mockito.when(service.getQueryResults(0L)).thenReturn(result);
+
+        mockMvc.perform(get("/execute?query=0")).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0][0]").value(1))
+                .andExpect(jsonPath("$[0][1]").value(0))
+                .andExpect(jsonPath("$[0][2]").value("Test"))
+                .andExpect(jsonPath("$[0][3]").value("T"));
+    }
+    
 }
