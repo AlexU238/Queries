@@ -1,0 +1,27 @@
+services:
+  database:
+    image: postgres:14.19
+    container_name: queries-database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  application:
+    build: .
+    container_name: queries-application
+    ports:
+      - "8080:8080"
+    environment:
+      DATASOURCE_URL: jdbc:postgresql://database:5432/postgres
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: postgres
+      PORT: 8080
+    depends_on:
+      - database
+volumes:
+  pgdata:
