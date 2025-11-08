@@ -27,6 +27,11 @@ Option 2: Docker (however you will need to edit the docker-compose file suit you
 3) In terminal type in:
  	docker compose build
 
+4) Run the application in docker with:
+	docker compose up
+
+
+
 
 Design process:
 
@@ -99,5 +104,3 @@ Solution for this bonus assignment was not provided as I have little experience 
 3) H2 database. For some reason I could not load the dataset into the database, such that the JDBC template could see the data. I switched to postgres, since I have it on my machine and I am more familiar with it.
 
 
-5) Run the application in docker with:
-	docker compose up
