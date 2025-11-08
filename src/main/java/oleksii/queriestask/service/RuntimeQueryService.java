@@ -21,7 +21,7 @@ public class RuntimeQueryService implements QueryService {
 
     @Autowired
     public RuntimeQueryService(JdbcTemplateRepository jdbcTemplateRepository) {
-        this.queriesToExecute = new ArrayList<>();
+        this.queriesToExecute = new HashSet<>();
         this.jdbcTemplateRepository = jdbcTemplateRepository;
         this.queriesExecuted = new HashMap<>();
         idCounter = 0;
@@ -32,7 +32,16 @@ public class RuntimeQueryService implements QueryService {
         if (query.startsWith("\"") && query.endsWith("\"") && query.length() > 1) {
             query = query.substring(1, query.length() - 1);
         }
-        queriesToExecute.add(Query.builder().id(idCounter).query(query).build());
+        Query toAdd = Query.builder().id(idCounter).query(query).build();
+
+        Optional<Query> existingQuery = queriesToExecute.stream()
+                .filter(q -> q.equals(toAdd))
+                .findFirst();
+
+        if (existingQuery.isPresent()) {
+            return existingQuery.get().getId();
+        }
+        queriesToExecute.add(toAdd);
         return idCounter++;
     }
 
@@ -47,7 +56,7 @@ public class RuntimeQueryService implements QueryService {
                 .filter(q -> q.getId() == id)
                 .findFirst().map(Query::getQuery)
                 .orElseThrow(() -> new NullPointerException("Query with id: " + id + " not found"));
-        
+
         if(queriesExecuted.containsKey(queryToExecute)) {return queriesExecuted.get(queryToExecute);}
 
         List<Map<String,Object>>queryResult;
