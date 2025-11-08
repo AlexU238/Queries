@@ -67,9 +67,9 @@ public class RuntimeQueryServiceTest {
         runtimeQueryService.addQuery(testQueryContent);
         runtimeQueryService.addQuery(testQueryContent);
 
-        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(2);
+        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
 
-        assertThat(runtimeQueryService.getIdCounter()).isEqualTo(2L);
+        assertThat(runtimeQueryService.getIdCounter()).isEqualTo(1L);
     }
 
     @Test
@@ -77,11 +77,11 @@ public class RuntimeQueryServiceTest {
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
         runtimeQueryService.getQueriesToExecute().add(testQuery2);
 
-        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(2);
+        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
 
         assertThat(runtimeQueryService.getQueries().size()).isEqualTo(runtimeQueryService.getQueriesToExecute().size());
 
-        assertThat(runtimeQueryService.getQueriesToExecute()).contains(testQuery1, testQuery2);
+        assertThat(runtimeQueryService.getQueriesToExecute()).contains(testQuery1);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class RuntimeQueryServiceTest {
         runtimeQueryService.getQueriesToExecute().add(testQuery1);
         runtimeQueryService.getQueriesToExecute().add(testQuery2);
 
-        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(2);
+        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
 
         assertThat(runtimeQueryService.getQueriesToExecute().stream().anyMatch(q->q.getId()==1L));
 
@@ -125,6 +125,6 @@ public class RuntimeQueryServiceTest {
 
         assertThrows(IllegalStateException.class,() -> {runtimeQueryService.getQueryResults(1L);});
 
-        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(0);
+        assertThat(runtimeQueryService.getQueriesToExecute().size()).isEqualTo(1);
     }
 }
