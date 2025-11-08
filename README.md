@@ -95,7 +95,7 @@ Thought 2: Job queue. Have some multi-threaded method running in the background 
 
 Thought 3: Queries have status. Have the queries be accepted by the service and executed in the background. Have the list of queries have the status of running, finished, waiting and have an endpoint to see the result of some query that is finished.
 
-Thought 4: Sub-queries. As SQL queries often consist of sub-queries, we can break down a query for execution and save the results of sub-queries, later we could see is the main query has the sub-queries that were executed before and substitute the results.
+Thought 4: Sub-queries. As SQL queries often consist of sub-queries, we can break down a query for execution and save the results of sub-queries, later we could see is the main query has the sub-queries that were executed before and substitute the results. But for this an SQL query parser in needed.
 
 Solution for this bonus assignment was not provided as I have little experience when it comes to creating multi-threaded solutions.
 
