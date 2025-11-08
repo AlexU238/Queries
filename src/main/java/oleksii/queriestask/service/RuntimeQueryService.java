@@ -57,7 +57,6 @@ public class RuntimeQueryService implements QueryService {
         try{
             queryResult=jdbcTemplateRepository.getQueryResultList(queryToExecute);
         }catch (Exception e){
-            //add logging
             throw new IllegalStateException("Failed to execute query", e);
         }
 
