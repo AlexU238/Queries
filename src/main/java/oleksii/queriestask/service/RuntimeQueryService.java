@@ -47,9 +47,7 @@ public class RuntimeQueryService implements QueryService {
                 .filter(q -> q.getId() == id)
                 .findFirst().map(Query::getQuery)
                 .orElseThrow(() -> new NullPointerException("Query with id: " + id + " not found"));
-
-        queriesToExecute.removeIf(q -> q.getId() == id);
-
+        
         if(queriesExecuted.containsKey(queryToExecute)) {return queriesExecuted.get(queryToExecute);}
 
         List<Map<String,Object>>queryResult;
