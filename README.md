@@ -2,16 +2,15 @@ How to run
 
 Option 1: Built and run with gradle in terminal (Powershell/cmd) locally
 
-1) Make sure that at least JAVA 17 is installed on your machine
+1) Make sure that at least JAVA 17 is installed on your machine. If needed export your JAVA HOME and path to JAVA HOME in the terminal (This is a fix for failed compileJava task).
 
-2) Go to the project folder and make sure it contains build.gradle and application.properties file in it. In terminal make sure you are on the path of the project (terminal is open in the project directory)
+2) Go to the project folder and make sure it contains build.gradle and /src/main/resources/application.properties file in it. In terminal make sure you are on the path of the project (terminal is open in the project directory)
 
-3) Create a file called application-local.properties that follows the structure of application.properties and populate it with your configuration.
+3) Create a file called /src/main/resources/application-local.properties that follows the structure of application.properties and populate it with your configuration. (Don't include spring.profiles.active line in the local properties file)
    Should look similar to the configuration in image but with your values
    <img width="649" height="138" alt="image" src="https://github.com/user-attachments/assets/58d582ff-45b0-4489-a2a7-96a3e085eb1f" />
 
-4) In terminal type in:
-
+4) In terminal type in: 
 	(On Linux) ./gradlew clean build
 	
 	(On windows Powershell/cmd) gradlew.bat clean build
