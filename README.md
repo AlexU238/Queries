@@ -1,6 +1,6 @@
 How to run
 
-Option 1: Built and run with gradle in terminal (Powershell/cmd) locally
+Option 1: Built and run with gradle in terminal (Linux terminal/Powershell/cmd) locally. WARNING: the build and development was done on linux.
 
 1) Make sure that at least JAVA 17 is installed on your machine. If needed export your JAVA HOME and path to JAVA HOME in the terminal (This is a fix for failed compileJava task).
 
@@ -40,6 +40,7 @@ Option 2: Docker (however you will need to edit the docker-compose file suit you
 
 Design process:
 
+(Thoughts and cretiques are in WARNING sections)
 
 1) Three requirements were listed: Ability to add and save a text based SQL query, Ability to review all currently added queries, Receive the result of a query as a 2d array. Out of these the main one is the receiving of the result of SQL query for a database.
 
