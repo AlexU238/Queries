@@ -84,7 +84,7 @@ Application properties had to be created to specify the configuration of connect
 
 6) Moved to presentation layer. Created a controller interface with the required interface and a class realizing the interface.
 
-	In the class methods for adding and getting queries just delegate the functionality to the service layer. Method to get the query results also handles the exceptions thrown by the corresponding method on the service layer by returning 404 if query not found or 400 if the query violates something or cannot be executed.
+	In the class methods for adding and getting queries just delegate the functionality to the service layer. Method to get the query results also handles the exceptions thrown by the corresponding method on the service layer by returning 404 if query not found or 400 if the query violates something or cannot be executed. Tested the endpoints in POSTMAN.
 
 
 FINAL THOUGHTS
