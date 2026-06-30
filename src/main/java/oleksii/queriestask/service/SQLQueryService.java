@@ -1,6 +1,7 @@
 package oleksii.queriestask.service;
 
 import oleksii.queriestask.repository.JdbcTemplateRepository;
+import oleksii.queriestask.repository.QueryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,40 +10,31 @@ import oleksii.queriestask.datamodel.Query;
 import java.util.*;
 
 @Service
-public class RuntimeQueryService implements QueryService {
+public class SQLQueryService implements QueryService { //add remove query
 
-    private final Collection<Query> queriesToExecute;
+    private final Collection<Query> queriesToExecute; //replace with its own database/redis ?
 
     private final JdbcTemplateRepository jdbcTemplateRepository;
 
+    private final QueryRepository queryRepository;
+
     private final Map<String, Object[][]> queriesExecuted;
 
-    private long idCounter;
 
     @Autowired
-    public RuntimeQueryService(JdbcTemplateRepository jdbcTemplateRepository) {
+    public SQLQueryService(JdbcTemplateRepository jdbcTemplateRepository, QueryRepository queryRepository) {
+        this.queryRepository = queryRepository;
         this.queriesToExecute = new HashSet<>();
         this.jdbcTemplateRepository = jdbcTemplateRepository;
         this.queriesExecuted = new HashMap<>();
-        idCounter = 0;
     }
 
     @Override
-    public Long addQuery(String query) {
-        if (query.startsWith("\"") && query.endsWith("\"") && query.length() > 1) {
-            query = query.substring(1, query.length() - 1);
-        }
-        Query toAdd = Query.builder().id(idCounter).query(query).build();
+    public Long addQuery(Query query) {
 
-        Optional<Query> existingQuery = queriesToExecute.stream()
-                .filter(q -> q.equals(toAdd))
-                .findFirst();
+        queryRepository.save(query);
 
-        if (existingQuery.isPresent()) {
-            return existingQuery.get().getId();
-        }
-        queriesToExecute.add(toAdd);
-        return idCounter++;
+        return query.getId();
     }
 
     @Override
@@ -51,7 +43,7 @@ public class RuntimeQueryService implements QueryService {
     }
 
     @Override
-    public Object[][] getQueryResults(long id) {
+    public Object[][] getQueryResults(long id) { //rework to be better?
         String queryToExecute=queriesToExecute.stream()
                 .filter(q -> q.getId() == id)
                 .findFirst().map(Query::getQuery)
@@ -79,18 +71,4 @@ public class RuntimeQueryService implements QueryService {
         return result;
     }
 
-    //testing only
-    long getIdCounter() {
-        return idCounter;
-    }
-
-    //testing only
-    Collection<Query> getQueriesToExecute() {
-        return queriesToExecute;
-    }
-
-    //testing only
-    Map<String, Object[][]> getQueriesExecuted() {
-        return queriesExecuted;
-    }
 }

@@ -22,7 +22,7 @@ public class RuntimeQueryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean(name = "runtimeQueryService")
+    @MockitoBean(name = "SQLQueryService")
     private QueryService service;
 
     private static final String PATH = "/queries";
