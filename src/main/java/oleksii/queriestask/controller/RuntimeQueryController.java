@@ -18,13 +18,13 @@ public class RuntimeQueryController implements QueryController {
     QueryService queryService;
 
     @Autowired
-    public RuntimeQueryController(@Qualifier("runtimeQueryService") QueryService queryService) {
+    public RuntimeQueryController(@Qualifier("SQLQueryService") QueryService queryService) {
         this.queryService = queryService;
     }
 
     @PostMapping(QUERIES_PATH)
     @Override
-    public Map<String, Object> add(@RequestBody String query) {
+    public Map<String, Object> add(@RequestBody Query query) {
         return Map.of("id",queryService.addQuery(query));
     }
 

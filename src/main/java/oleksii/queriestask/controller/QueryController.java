@@ -7,7 +7,7 @@ import java.util.Map;
 
 public interface QueryController {
 
-    public Map<String, Object> add(String query);
+    public Map<String, Object> add(Query query);
 
     public Collection<Query> findAll();
 
