@@ -23,7 +23,7 @@ import java.util.Objects;
 @ToString
 
 @Entity
-@Table(name = "queries")
+@Table(name = "query")
 public class Query {
 
     @Id
@@ -31,7 +31,7 @@ public class Query {
     @Column(name = "id")
     private long id;
 
-    @Column(name = "query")
+    @Column(name = "sql_script")
     private String query;
 
     @Override

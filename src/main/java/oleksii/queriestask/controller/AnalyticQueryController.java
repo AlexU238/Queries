@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -36,7 +37,7 @@ public class RuntimeQueryController implements QueryController {
 
     @GetMapping("/execute")
     @Override
-    public Object[][] executeById(@RequestParam("query") Long query) {
+    public List<Map<String, Object>> executeById(@RequestParam("query") Long query) {
         try{
             return queryService.getQueryResults(query);
         }catch (NullPointerException e){
