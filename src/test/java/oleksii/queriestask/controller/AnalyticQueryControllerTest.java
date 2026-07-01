@@ -1,7 +1,10 @@
 package oleksii.queriestask.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import oleksii.queriestask.datamodel.Query;
 import oleksii.queriestask.service.QueryService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,15 +12,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(RuntimeQueryController.class)
-public class RuntimeQueryControllerTest {
+@WebMvcTest(AnalyticQueryController.class)
+public class AnalyticQueryControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -29,14 +35,20 @@ public class RuntimeQueryControllerTest {
 
     private static final String QUERY = "SELECT * FROM test";
 
+    private static final Query testQuery = Query.builder().id(1L).query(QUERY).build();
+
     @Test
     void addTest() throws Exception {
-        //Mockito.when(service.addQuery(QUERY)).thenReturn(0L);
-
-        mockMvc.perform(post(PATH)
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content(QUERY))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(0));
+        Mockito.when(service.addQuery(testQuery)).thenReturn(1L);
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(testQuery);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/queries")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id", Matchers.is(1)));
     }
 
     @Test
@@ -56,15 +68,23 @@ public class RuntimeQueryControllerTest {
 
     @Test
     void executeByIdTest() throws Exception {
-        Object[][] result = {{1,0,"Test",'T'}};
+        List<Map<String, Object>> result = List.of(
+                Map.of(
+                        "id", 1,
+                        "status", 0,
+                        "name", "Test",
+                        "type", 'T'
+                )
+        );
 
         Mockito.when(service.getQueryResults(0L)).thenReturn(result);
 
-        mockMvc.perform(get("/execute?query=0")).andExpect(status().isOk())
-                .andExpect(jsonPath("$[0][0]").value(1))
-                .andExpect(jsonPath("$[0][1]").value(0))
-                .andExpect(jsonPath("$[0][2]").value("Test"))
-                .andExpect(jsonPath("$[0][3]").value("T"));
+        mockMvc.perform(get("/execute?query=0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].status").value(0))
+                .andExpect(jsonPath("$[0].name").value("Test"))
+                .andExpect(jsonPath("$[0].type").value("T"));
     }
 
     @Test

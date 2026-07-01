@@ -13,13 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-public class RuntimeQueryController implements QueryController {
+public class AnalyticQueryController implements QueryController {
 
     private static final String QUERIES_PATH="/queries";
     QueryService queryService;
 
     @Autowired
-    public RuntimeQueryController(@Qualifier("SQLQueryService") QueryService queryService) {
+    public AnalyticQueryController(@Qualifier("analyticQueryService") QueryService queryService) {
         this.queryService = queryService;
     }
 
