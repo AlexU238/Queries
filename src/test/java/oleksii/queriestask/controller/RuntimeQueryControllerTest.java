@@ -31,7 +31,7 @@ public class RuntimeQueryControllerTest {
 
     @Test
     void addTest() throws Exception {
-        Mockito.when(service.addQuery(QUERY)).thenReturn(0L);
+        //Mockito.when(service.addQuery(QUERY)).thenReturn(0L);
 
         mockMvc.perform(post(PATH)
                         .contentType(MediaType.TEXT_PLAIN)

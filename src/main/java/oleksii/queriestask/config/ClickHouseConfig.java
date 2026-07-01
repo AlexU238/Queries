@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import javax.sql.DataSource;
@@ -23,9 +24,9 @@ public class ClickHouseConfig {
     }
 
     @Bean(name = "clickhouseJdbcTemplate")
-    public NamedParameterJdbcTemplate clickhouseJdbcTemplate(
+    public JdbcTemplate clickhouseJdbcTemplate(
             @Qualifier("clickhouseDataSource") DataSource dataSource) {
         // This is the direct query tool that executes custom analytical strings
-        return new NamedParameterJdbcTemplate(dataSource);
+        return new JdbcTemplate(dataSource);
     }
 }
