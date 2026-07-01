@@ -2,6 +2,8 @@ package oleksii.queriestask.service;
 
 import oleksii.queriestask.datamodel.Query;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public interface QueryService {
 
@@ -9,6 +11,6 @@ public interface QueryService {
 
     Collection<Query> getQueries();
 
-    Object[][] getQueryResults(long id);
+    List<Map<String, Object>> getQueryResults(long id);
 
 }

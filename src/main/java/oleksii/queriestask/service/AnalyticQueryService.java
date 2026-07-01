@@ -10,7 +10,7 @@ import oleksii.queriestask.datamodel.Query;
 import java.util.*;
 
 @Service
-public class SQLQueryService implements QueryService { //add remove query
+public class AnalyticQueryService implements QueryService { //add remove query
 
     private final JdbcTemplateRepository jdbcTemplateRepository;
 
@@ -18,7 +18,7 @@ public class SQLQueryService implements QueryService { //add remove query
 
 
     @Autowired
-    public SQLQueryService(JdbcTemplateRepository jdbcTemplateRepository, QueryRepository queryRepository) {
+    public AnalyticQueryService(JdbcTemplateRepository jdbcTemplateRepository, QueryRepository queryRepository) {
         this.queryRepository = queryRepository;
         this.jdbcTemplateRepository = jdbcTemplateRepository;
     }
@@ -41,7 +41,7 @@ public class SQLQueryService implements QueryService { //add remove query
     }
 
     @Override
-    public List<Map<String, Object>> getQueryResults(long id) {
+    public List<Map<String, Object>> getQueryResults(long id) { //make multithreaded
 
         Optional<Query> toExecute = queryRepository.findById(id);
 
@@ -50,7 +50,7 @@ public class SQLQueryService implements QueryService { //add remove query
         if(toExecute.isPresent()){
             result = jdbcTemplateRepository.getQueryResultList(toExecute.get().getQuery());
         }else{
-            throw new NullPointerException();
+            throw new NoSuchElementException();
         }
 
         return result;
