@@ -1,6 +1,6 @@
 # ---- Build stage ----
 FROM gradle:8.10-jdk17 AS builder
-LABEL authors="oleksii"
+LABEL authors="oleksii (U238)"
 WORKDIR /app
 COPY . .
 RUN gradle bootJar --no-daemon

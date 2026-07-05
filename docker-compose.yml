@@ -11,17 +11,38 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  analytics-db:
+    image: clickhouse/clickhouse-server:latest
+    container_name: queries-analytics
+    ports:
+      - "8123:8123" # HTTP interface
+      - "9000:9000" # Native protocol
+    environment:
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_DB: analytics
+    volumes:
+      - chdata:/var/lib/clickhouse
+
   application:
     build: .
     container_name: queries-application
     ports:
       - "8080:8080"
     environment:
-      DATASOURCE_URL: jdbc:postgresql://database:5432/postgres
-      DATASOURCE_USERNAME: postgres
-      DATASOURCE_PASSWORD: postgres
       PORT: 8080
+      # PostgreSQL Mappings
+      POSTGRES_DATASOURCE_URL: jdbc:postgresql://database:5432/postgres
+      POSTGRES_DATASOURCE_USERNAME: postgres
+      POSTGRES_DATASOURCE_PASSWORD: postgres
+      # ClickHouse Mappings
+      CLICKHOUSE_DATASOURCE_URL: jdbc:clickhouse://analytics-db:8123/analytics
+      CLICKHOUSE_DATASOURCE_USERNAME: clickhouse_user
+      CLICKHOUSE_DATASOURCE_PASSWORD: clickhouse_password
     depends_on:
       - database
+      - analytics-db
+
 volumes:
   pgdata:
+  chdata:

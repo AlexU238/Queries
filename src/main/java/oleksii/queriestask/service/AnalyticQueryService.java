@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import oleksii.queriestask.datamodel.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -41,7 +42,7 @@ public class AnalyticQueryService implements QueryService { //add remove query
     }
 
     @Override
-    public List<Map<String, Object>> getQueryResults(long id) { //make multithreaded
+    public List<Map<String, Object>> getQueryResults(long id) {
 
         Optional<Query> toExecute = queryRepository.findById(id);
 
