@@ -3,24 +3,36 @@ package oleksii.queriestask.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import oleksii.queriestask.datamodel.Query;
-import oleksii.queriestask.service.QueryService;
+import oleksii.queriestask.service.StreamingQueryService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AnalyticQueryController.class)
 public class AnalyticQueryControllerTest {
@@ -28,18 +40,22 @@ public class AnalyticQueryControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean(name = "SQLQueryService")
-    private QueryService service;
+    @MockitoBean(name = "analyticQueryService")
+    private StreamingQueryService service;
 
     private static final String PATH = "/queries";
+
+    private static final String PATH_TO_ZERO_ID_RESULT = "/queries/0/results";
+
+    private static final String PATH_TO_ZERO_ID_RESULT_STREAM = "/queries/0/results/stream";
 
     private static final String QUERY = "SELECT * FROM test";
 
     private static final Query testQuery = Query.builder().id(1L).query(QUERY).build();
 
     @Test
-    void addTest() throws Exception {
-        Mockito.when(service.addQuery(testQuery)).thenReturn(1L);
+    void testAdd() throws Exception {
+        when(service.addQuery(testQuery)).thenReturn(1L);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(testQuery);
         mockMvc.perform(MockMvcRequestBuilders
@@ -52,8 +68,8 @@ public class AnalyticQueryControllerTest {
     }
 
     @Test
-    void findAllTest() throws Exception {
-        Mockito.when(service.getQueries()).thenReturn(
+    void testFindAll() throws Exception {
+        when(service.getQueries()).thenReturn(
                 List.of(
                         Query.builder().id(0L).query(QUERY).build(),
                         Query.builder().id(1L).query(QUERY).build()
@@ -67,7 +83,7 @@ public class AnalyticQueryControllerTest {
     }
 
     @Test
-    void executeByIdTest() throws Exception {
+    void testExecuteById() throws Exception {
         List<Map<String, Object>> result = List.of(
                 Map.of(
                         "id", 1,
@@ -77,9 +93,9 @@ public class AnalyticQueryControllerTest {
                 )
         );
 
-        Mockito.when(service.getQueryResults(0L)).thenReturn(result);
+        when(service.getQueryResults(0L)).thenReturn(result);
 
-        mockMvc.perform(get("/execute?query=0"))
+        mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].status").value(0))
@@ -88,16 +104,49 @@ public class AnalyticQueryControllerTest {
     }
 
     @Test
-    void executeByIdNotFoundTest() throws Exception {
-        Mockito.when(service.getQueryResults(0L)).thenThrow(NullPointerException.class);
+    void testExecuteByIdNotFound() throws Exception {
+        when(service.getQueryResults(0L)).thenThrow(NullPointerException.class);
 
-        mockMvc.perform(get("/execute?query=0")).andExpect(status().isNotFound());
+        mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT)).andExpect(status().isNotFound());
     }
 
     @Test
-    void executeByIdBadRequestTest() throws Exception {
-        Mockito.when(service.getQueryResults(0L)).thenThrow(IllegalStateException.class);
+    void testExecuteByIdBadRequest() throws Exception {
+        when(service.getQueryResults(0L)).thenThrow(IllegalStateException.class);
 
-        mockMvc.perform(get("/execute?query=0")).andExpect(status().isBadRequest());
+        mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT)).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testStreamQueryResultsSuccess() throws Exception {
+        Long id = 0L;
+        when(service.getQueryById(id)).thenReturn(Optional.of(new Query()));
+
+        String mockJson = "[{\"id\":1,\"status\":0,\"name\":\"Test\",\"type\":\"T\"}]";
+        doAnswer(invocation -> {
+            OutputStream os = invocation.getArgument(1);
+            os.write(mockJson.getBytes(StandardCharsets.UTF_8));
+            return null;
+        }).when(service).streamQueryResults(eq(id), any(OutputStream.class));
+
+        MvcResult result = mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT_STREAM))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        //Dispatch async event and verify stream contents
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].status").value(0))
+                .andExpect(jsonPath("$[0].name").value("Test"))
+                .andExpect(jsonPath("$[0].type").value("T"));
+    }
+
+    @Test
+    void testStreamQueryResultsNotFound() throws Exception {
+        Long id = 0L;
+        when(service.getQueryById(id)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT_STREAM)).andExpect(status().isNotFound());
     }
 }

@@ -1,14 +1,28 @@
 package oleksii.queriestask.service;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import oleksii.queriestask.datamodel.Query;
 import oleksii.queriestask.repository.JdbcTemplateRepository;
 import oleksii.queriestask.repository.QueryRepository;
+import oleksii.queriestask.util.RowProcessor;
+import oleksii.queriestask.util.factory.RowProcessorFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,8 +38,20 @@ public class AnalyticQueryServiceTest {
     @Mock
     private JdbcTemplateRepository jdbcTemplateRepository;
 
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+
+    @Mock
+    private RowProcessorFactory factory;
+
+    @Mock
+    private RowProcessor rowProcessor;
+
     @InjectMocks
     private AnalyticQueryService service;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     public void testAddQuery() {
@@ -60,7 +86,7 @@ public class AnalyticQueryServiceTest {
     }
 
     @Test
-    public void testGetQueryResults_Success() {
+    public void testGetQueryResultsSuccess() {
         long queryId = 1L;
         Query mockQuery = new Query();
         mockQuery.setId(queryId);
@@ -86,7 +112,7 @@ public class AnalyticQueryServiceTest {
     }
 
     @Test
-    public void testGetQueryResults_NotFound_ThrowsException() {
+    public void testGetQueryResultsNotFoundThrowsException() {
         long nonExistentId = 999L;
         when(queryRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
@@ -97,4 +123,87 @@ public class AnalyticQueryServiceTest {
         verify(queryRepository, times(1)).findById(nonExistentId);
         verifyNoInteractions(jdbcTemplateRepository);
     }
+
+    @Test
+    void testStreamQueryResultsSuccess() throws IOException, SQLException {
+        long queryId = 1L;
+        Query mockQuery = new Query();
+        mockQuery.setId(queryId);
+        mockQuery.setQuery("select * from users");
+
+        when(factory.create(any(JsonGenerator.class)))
+                .thenAnswer(invocation ->
+                        new RowProcessor(invocation.getArgument(0))
+                );
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
+        when(jdbcTemplateRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
+
+        // Mock ResultSet & Metadata
+        ResultSet mockRs = mock(ResultSet.class);
+        ResultSetMetaData mockMetaData = mock(ResultSetMetaData.class);
+
+        when(mockRs.getMetaData()).thenReturn(mockMetaData);
+        when(mockMetaData.getColumnCount()).thenReturn(2);
+        when(mockMetaData.getColumnLabel(1)).thenReturn("id");
+        when(mockMetaData.getColumnLabel(2)).thenReturn("name");
+
+        when(mockRs.getObject(1)).thenReturn(1L);
+        when(mockRs.getObject(2)).thenReturn("Alice");
+
+        // Intercept JdbcTemplate and execute the real RowProcessor
+        doAnswer(invocation -> {
+            RowCallbackHandler handler = invocation.getArgument(1);
+            handler.processRow(mockRs);
+            return null;
+        }).when(jdbcTemplate).query(eq(mockQuery.getQuery()), any(RowCallbackHandler.class));
+
+        service.streamQueryResults(queryId, outputStream);
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        JsonNode expected =
+                mapper.readTree("[{\"id\":1,\"name\":\"Alice\"}]");
+
+        JsonNode actual =
+                mapper.readTree(outputStream.toString(StandardCharsets.UTF_8));
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void testStreamQueryResultsFail(){
+
+        long queryId = 1L;
+        Query mockQuery = new Query();
+        mockQuery.setId(queryId);
+        mockQuery.setQuery("select * from users");
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
+        when(jdbcTemplateRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
+
+        doAnswer(invocation -> {
+            RowCallbackHandler handler = invocation.getArgument(1);
+            ResultSet mockResultSet = mock(ResultSet.class);
+
+            // Mock ResultSet to throw an exception when reading columns/data
+            when(mockResultSet.getMetaData()).thenThrow(new SQLException("Exception"));
+
+            // Triggers processRow which catches exception and rethrows
+            handler.processRow(mockResultSet);
+            return null;
+        }).when(jdbcTemplate).query(eq(mockQuery.getQuery()), any(RowCallbackHandler.class));
+
+        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+                service.streamQueryResults(queryId, outputStream)
+        );
+
+        // Verifies the outer streamQueryResults try-catch block caught the row failure
+        assertEquals("Streaming failed", exception.getMessage());
+    }
+
 }
