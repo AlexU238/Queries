@@ -78,12 +78,6 @@ Application properties had to be created to specify the configuration of connect
 
 	Also added some getter methods with package-private level of access for testing purposes. 
 
-	WARNING: having the service made this way is terrible decision design-wise as it does not scale and information in it disappears when instance is destroyed.
-	Using a counter in class is bad as it also does not scale. Also it is not static and not atomic. In case of not static, with spring creating the bean as a singleton by default, I did not think it was critical later, at the moment of creation I just forgot about it after creation. 
-	Not having the counter atomic would become a problem if multi-threading was added to the application. (Thoughts about it later)
-	If the data changes at some point a restart would be required to clear the ‘cache’. 
-	Using collections locally is not good as, once again, data loss is a problem in case of outage. I had an idea about using a database table for storing queries (possibly with hash as a determiner for unique queries) and the results of executed queries. This way if the service is down, no progress would be lost and in case of data update on the main dataset, the queries table could just be cleared. This would also solve the problem of an id counter in service. But for this assignment I did not think such solution was necessary and this would require to hold a database table for queries.
-
 6) Moved to presentation layer. Created a controller interface with the required interface and a class realizing the interface.
 
 	In the class methods for adding and getting queries just delegate the functionality to the service layer. Method to get the query results also handles the exceptions thrown by the corresponding method on the service layer by returning 404 if query not found or 400 if the query violates something or cannot be executed. Tested the endpoints in POSTMAN.
