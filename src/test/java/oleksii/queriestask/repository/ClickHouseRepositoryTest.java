@@ -5,9 +5,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.util.*;
 
@@ -16,13 +14,13 @@ import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-class JdbcTemplateRepositoryTest {
+class ClickHouseRepositoryTest {
 
     @Mock
     private JdbcTemplate jdbcTemplate;
 
     @InjectMocks
-    private JdbcTemplateRepository repository;
+    private ClickHouseRepository repository;
 
     private final String sql = "SELECT * FROM USERS";
 
@@ -52,7 +50,6 @@ class JdbcTemplateRepositoryTest {
 
     @Test
     void testComplexQuery() {
-        // 1. Arrange: Create the 2 matching users that the DB would theoretically return
         List<Map<String, Object>> mockDbResult = List.of(
                 Map.of("id", 1, "name", "Bob", "age", 30),
                 Map.of("id", 2, "name", "Charlie", "age", 27)

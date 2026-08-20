@@ -2,26 +2,24 @@ package oleksii.queriestask.service;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import oleksii.queriestask.repository.JdbcTemplateRepository;
+import oleksii.queriestask.repository.ClickHouseRepository;
 import oleksii.queriestask.repository.QueryRepository;
-import oleksii.queriestask.util.RowProcessor;
 import oleksii.queriestask.util.factory.RowProcessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import oleksii.queriestask.datamodel.Query;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.sql.ResultSetMetaData;
 import java.util.*;
 
 @Service("analyticQueryService")
 public class AnalyticQueryService implements StreamingQueryService { //add remove query
 
-    private final JdbcTemplateRepository jdbcTemplateRepository;
+    private final ClickHouseRepository clickHouseRepository;
 
     private final QueryRepository queryRepository;
 
@@ -30,12 +28,12 @@ public class AnalyticQueryService implements StreamingQueryService { //add remov
     private final RowProcessorFactory factory;
 
     @Autowired
-    public AnalyticQueryService(JdbcTemplateRepository jdbcTemplateRepository,
+    public AnalyticQueryService(ClickHouseRepository clickHouseRepository,
                                 QueryRepository queryRepository,
                                 ObjectMapper objectMapper,
                                 RowProcessorFactory factory) {
         this.queryRepository = queryRepository;
-        this.jdbcTemplateRepository = jdbcTemplateRepository;
+        this.clickHouseRepository = clickHouseRepository;
         this.objectMapper = objectMapper;
         this.factory = factory;
     }
@@ -64,10 +62,10 @@ public class AnalyticQueryService implements StreamingQueryService { //add remov
 
         List<Map<String, Object>> result;
 
-        if (toExecute.isPresent()) {
-            result = jdbcTemplateRepository.getQueryResultList(toExecute.get().getQuery());
-        } else {
-            throw new NoSuchElementException();
+        try{
+           result= clickHouseRepository.getQueryResultList(toExecute.orElseThrow(NoSuchElementException::new).getQuery());
+        }catch (DataAccessException e){
+            throw new IllegalStateException();
         }
 
         return result;
@@ -85,12 +83,14 @@ public class AnalyticQueryService implements StreamingQueryService { //add remov
 
         try (JsonGenerator jsonGenerator = objectMapper.getFactory().createGenerator(outputStream)) {
             jsonGenerator.writeStartArray();
-            JdbcTemplate template = jdbcTemplateRepository.getJdbcTemplate();
+            JdbcTemplate template = clickHouseRepository.getJdbcTemplate();
 
             template.query(query.getQuery(), factory.create(jsonGenerator));
 
             jsonGenerator.writeEndArray();
             jsonGenerator.flush();
+        }catch (DataAccessException e){
+            throw new IllegalStateException();
         } catch (Exception e) {
             throw new RuntimeException("Streaming failed", e);
         }

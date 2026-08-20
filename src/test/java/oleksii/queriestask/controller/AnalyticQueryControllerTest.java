@@ -6,31 +6,24 @@ import oleksii.queriestask.datamodel.Query;
 import oleksii.queriestask.service.StreamingQueryService;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -140,6 +133,23 @@ public class AnalyticQueryControllerTest {
                 .andExpect(jsonPath("$[0].status").value(0))
                 .andExpect(jsonPath("$[0].name").value("Test"))
                 .andExpect(jsonPath("$[0].type").value("T"));
+    }
+
+    @Test
+    void testStreamQueryResultsServiceException() throws Exception {
+        long id = 0L;
+        when(service.getQueryById(id)).thenReturn(Optional.of(new Query()));
+
+        doThrow(new IllegalStateException("ClickHouse failure"))
+                .when(service).streamQueryResults(eq(id), any(OutputStream.class));
+
+        MvcResult result = mockMvc.perform(get(PATH_TO_ZERO_ID_RESULT_STREAM))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
     }
 
     @Test

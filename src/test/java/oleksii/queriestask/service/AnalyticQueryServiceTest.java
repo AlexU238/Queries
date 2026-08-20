@@ -1,10 +1,11 @@
 package oleksii.queriestask.service;
 
+import com.clickhouse.client.api.ServerException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import oleksii.queriestask.datamodel.Query;
-import oleksii.queriestask.repository.JdbcTemplateRepository;
+import oleksii.queriestask.repository.ClickHouseRepository;
 import oleksii.queriestask.repository.QueryRepository;
 import oleksii.queriestask.util.RowProcessor;
 import oleksii.queriestask.util.factory.RowProcessorFactory;
@@ -14,8 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.datasource.init.UncategorizedScriptException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -36,7 +39,7 @@ public class AnalyticQueryServiceTest {
     private QueryRepository queryRepository;
 
     @Mock
-    private JdbcTemplateRepository jdbcTemplateRepository;
+    private ClickHouseRepository clickHouseRepository;
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -99,7 +102,7 @@ public class AnalyticQueryServiceTest {
         mockResult.add(row);
 
         when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
-        when(jdbcTemplateRepository.getQueryResultList(mockQuery.getQuery())).thenReturn(mockResult);
+        when(clickHouseRepository.getQueryResultList(mockQuery.getQuery())).thenReturn(mockResult);
 
         List<Map<String, Object>> actualResult = service.getQueryResults(queryId);
 
@@ -108,7 +111,7 @@ public class AnalyticQueryServiceTest {
         assertEquals("john_doe", actualResult.get(0).get("username"));
 
         verify(queryRepository, times(1)).findById(queryId);
-        verify(jdbcTemplateRepository, times(1)).getQueryResultList(mockQuery.getQuery());
+        verify(clickHouseRepository, times(1)).getQueryResultList(mockQuery.getQuery());
     }
 
     @Test
@@ -121,7 +124,31 @@ public class AnalyticQueryServiceTest {
         });
 
         verify(queryRepository, times(1)).findById(nonExistentId);
-        verifyNoInteractions(jdbcTemplateRepository);
+        verifyNoInteractions(clickHouseRepository);
+    }
+
+    @Test
+    public void testGetQueryResultServerException() {
+        long queryId = 1L;
+        Query mockQuery = new Query();
+        mockQuery.setId(queryId);
+        mockQuery.setQuery("select * from users");
+
+        List<Map<String, Object>> mockResult = new ArrayList<>();
+        Map<String, Object> row = new HashMap<>();
+        row.put("id", 1);
+        row.put("username", "john_doe");
+        mockResult.add(row);
+
+        DataAccessException concreteException = new UncategorizedScriptException("ClickHouse syntax error", new RuntimeException());
+
+        when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
+        when(clickHouseRepository.getQueryResultList(mockQuery.getQuery())).thenThrow(concreteException);
+
+        assertThrows(IllegalStateException.class, () -> {
+            service.getQueryResults(1);
+        });
+
     }
 
     @Test
@@ -139,7 +166,7 @@ public class AnalyticQueryServiceTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
-        when(jdbcTemplateRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
+        when(clickHouseRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
 
         // Mock ResultSet & Metadata
         ResultSet mockRs = mock(ResultSet.class);
@@ -184,7 +211,7 @@ public class AnalyticQueryServiceTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
-        when(jdbcTemplateRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
+        when(clickHouseRepository.getJdbcTemplate()).thenReturn(jdbcTemplate);
 
         doAnswer(invocation -> {
             RowCallbackHandler handler = invocation.getArgument(1);

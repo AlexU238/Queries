@@ -1,11 +1,9 @@
 package oleksii.queriestask.controller;
 
 import oleksii.queriestask.datamodel.Query;
-import oleksii.queriestask.service.QueryService;
 import oleksii.queriestask.service.StreamingQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +57,12 @@ public class AnalyticQueryController implements QueryController {
         if(queryService.getQueryById(id).isEmpty()) return ResponseEntity.notFound().build();
 
         StreamingResponseBody stream = outputStream -> {
-            queryService.streamQueryResults(id, outputStream);
+            try {
+                queryService.streamQueryResults(id, outputStream);
+            } catch (IllegalStateException e) {
+                outputStream.flush();
+                outputStream.close();
+            }
         };
 
         return ResponseEntity.ok()
