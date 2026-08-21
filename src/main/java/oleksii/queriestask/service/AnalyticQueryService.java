@@ -51,6 +51,12 @@ public class AnalyticQueryService implements StreamingQueryService { //add remov
     }
 
     @Override
+    public void deleteQueryById(Long id) {
+        Query toDelete = queryRepository.findById(id).orElseThrow(NoSuchElementException::new);
+        queryRepository.delete(toDelete);
+    }
+
+    @Override
     public Collection<Query> getQueries() {
         return queryRepository.findAll();
     }

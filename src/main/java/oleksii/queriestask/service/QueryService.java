@@ -10,6 +10,8 @@ public interface QueryService {
 
     Long addQuery(Query query);
 
+    void deleteQueryById(Long id);
+
     Optional<Query> getQueryById(Long id);
 
     Collection<Query> getQueries();

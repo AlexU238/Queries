@@ -1,6 +1,5 @@
 package oleksii.queriestask.service;
 
-import com.clickhouse.client.api.ServerException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +71,33 @@ public class AnalyticQueryServiceTest {
         assertEquals(100L, generatedId);
         assertEquals("select * from users where id = 1", inputQuery.getQuery());
         verify(queryRepository, times(1)).save(inputQuery);
+    }
+
+    @Test
+    public void testDeleteQuery(){
+        Long queryId = 1L;
+        Query mockQuery = new Query();
+        mockQuery.setId(queryId);
+
+        when(queryRepository.findById(queryId)).thenReturn(Optional.of(mockQuery));
+
+        service.deleteQueryById(queryId);
+
+        verify(queryRepository, times(1)).findById(queryId);
+        verify(queryRepository, times(1)).delete(mockQuery);
+    }
+
+    @Test
+    public void testDeleteQueryNotFoundException(){
+        Long queryId = 99L;
+        when(queryRepository.findById(queryId)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> {
+            service.deleteQueryById(queryId);
+        });
+
+        verify(queryRepository, times(1)).findById(queryId);
+        verify(queryRepository, never()).delete(any());
     }
 
     @Test

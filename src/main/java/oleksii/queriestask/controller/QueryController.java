@@ -8,10 +8,12 @@ import java.util.Map;
 
 public interface QueryController {
 
-    public Map<String, Object> add(Query query);
+     Map<String, Object> add(Query query);
 
-    public Collection<Query> findAll();
+     void delete(Long id);
 
-    public List<Map<String, Object>> executeById(Long id);
+     Collection<Query> findAll();
+
+    List<Map<String, Object>> executeById(Long id);
 
 }

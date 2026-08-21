@@ -14,10 +14,11 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/queries")
-public class AnalyticQueryController implements QueryController {
+public class AnalyticQueryController implements QueryController, StreamResultsControllerAddOn {
 
     private final StreamingQueryService queryService;
 
@@ -30,6 +31,16 @@ public class AnalyticQueryController implements QueryController {
     @Override
     public Map<String, Object> add(@RequestBody Query query) {
         return Map.of("id",queryService.addQuery(query));
+    }
+
+    @DeleteMapping("/{id}")
+    @Override
+    public void delete(@PathVariable Long id) {
+        try {
+            queryService.deleteQueryById(id);
+        }catch (NoSuchElementException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
     }
 
     @GetMapping

@@ -19,6 +19,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +38,8 @@ public class AnalyticQueryControllerTest {
     private StreamingQueryService service;
 
     private static final String PATH = "/queries";
+
+    private static final String PATH_TO_ZERO_ID = "/queries/0";
 
     private static final String PATH_TO_ZERO_ID_RESULT = "/queries/0/results";
 
@@ -58,6 +61,33 @@ public class AnalyticQueryControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id", Matchers.is(1)));
+    }
+
+    @Test
+    void testDeleteSuccess() throws Exception {
+        Long queryId = 0L;
+        doNothing().when(service).deleteQueryById(queryId);
+
+        // When & Then
+        mockMvc.perform(delete(PATH_TO_ZERO_ID, queryId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(service, times(1)).deleteQueryById(queryId);
+    }
+
+    @Test
+    void testDeleteNotFound() throws Exception{
+        Long queryId = 99L;
+        doThrow(new NoSuchElementException("Query not found"))
+                .when(service).deleteQueryById(queryId);
+
+        // When & Then
+        mockMvc.perform(delete(PATH+"/{id}", queryId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(service, times(1)).deleteQueryById(queryId);
     }
 
     @Test

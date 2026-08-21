@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
